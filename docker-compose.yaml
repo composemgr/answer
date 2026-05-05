@@ -21,8 +21,8 @@ services:
       PUID: ${SERVICE_USER:-1000}
       PGID: ${SERVICE_GROUP:-1000}
     volumes:
-      - ./rootfs/config/answer:/config
-      - ./rootfs/data/answer:/data
+      - ./volumes/config/answer:/config
+      - ./volumes/data/answer:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9411"]
       interval: 30s
