@@ -47,8 +47,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/answer` - Data storage
-- `./rootfs/data/answer` - Data storage
+- `./volumes/config/answer` - Data storage
+- `./volumes/data/answer` - Data storage
 
 ## 🔍 Logging
 
