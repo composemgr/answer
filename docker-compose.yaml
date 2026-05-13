@@ -15,12 +15,32 @@ services:
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     logging: *default-logging
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://answer-app:80'
+      - 'cloudflare.hostname=answer.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.answer-app.entrypoints=http'
+      - 'traefik.http.routers.answer-app-secure.tls=true'
+      - 'traefik.http.routers.answer-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.answer-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.answer-app.middlewares=answer-app-https-redirect'
+      - 'traefik.http.routers.answer-app-secure.entrypoints=https'
+      - 'traefik.http.routers.answer-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.answer-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.answer-app-secure.service=answer-app'
+      - 'traefik.http.services.answer-app.loadbalancer.server.port=80'
     networks:
       - answer
+      - proxy
+      - cloudflare
     ports:
       - "172.17.0.1:9411:80"
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: answer-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
       ASC_DOMAIN: https://${BASE_HOST_NAME:-$HOSTNAME}
       ASC_DB_DRIVER: mysql
       ASC_DB_USERNAME: ${DB_USER_NAME:-answer}
@@ -49,6 +69,7 @@ services:
       - answer
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: answer-db
       MYSQL_DATABASE: ${DB_CREATE_DATABASE_NAME:-answer}
       MYSQL_USER: ${DB_USER_NAME:-answer}
       MYSQL_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
@@ -64,3 +85,7 @@ services:
 networks:
   answer:
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
