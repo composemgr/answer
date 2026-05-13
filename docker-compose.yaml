@@ -1,5 +1,6 @@
 # nginx proxy address - http://172.17.0.1:9411
 
+name: answer
 x-logging: &default-logging
   driver: json-file
   options:
@@ -8,23 +9,54 @@ x-logging: &default-logging
 
 services:
   answer:
-    image: answer/answer:latest
+    image: apache/answer:latest
+    pull_policy: always
     container_name: answer-app
-    restart: unless-stopped
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
     logging: *default-logging
     networks:
       - answer
     ports:
-      - "9411:9411"
+      - "172.17.0.1:9411:80"
     environment:
       TZ: ${TZ:-America/New_York}
-      PUID: ${SERVICE_USER:-1000}
-      PGID: ${SERVICE_GROUP:-1000}
+      ASC_DOMAIN: https://${BASE_HOST_NAME:-$HOSTNAME}
+      ASC_DB_DRIVER: mysql
+      ASC_DB_USERNAME: ${DB_USER_NAME:-answer}
+      ASC_DB_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
+      ASC_DB_HOST: answer-db
+      ASC_DB_NAME: ${DB_CREATE_DATABASE_NAME:-answer}
     volumes:
-      - ./volumes/config/answer:/config
       - ./volumes/data/answer:/data
+    depends_on:
+      answer-db:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9411"]
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  answer-db:
+    image: mysql:latest
+    pull_policy: always
+    container_name: answer-db
+    hostname: answer-db
+    restart: always
+    logging: *default-logging
+    networks:
+      - answer
+    environment:
+      TZ: ${TZ:-America/New_York}
+      MYSQL_DATABASE: ${DB_CREATE_DATABASE_NAME:-answer}
+      MYSQL_USER: ${DB_USER_NAME:-answer}
+      MYSQL_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
+      MYSQL_ROOT_PASSWORD: ${DB_ADMIN_PASS:-changeme_admin_password}
+    volumes:
+      - ./volumes/data/db/mysql/answer:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
       interval: 30s
       timeout: 10s
       retries: 3
