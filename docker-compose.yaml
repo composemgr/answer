@@ -41,12 +41,12 @@ services:
       TZ: ${TZ:-America/New_York}
       CONTAINER_NAME: answer-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
-      ASC_DOMAIN: https://${BASE_HOST_NAME:-$HOSTNAME}
-      ASC_DB_DRIVER: mysql
-      ASC_DB_USERNAME: ${DB_USER_NAME:-answer}
-      ASC_DB_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
-      ASC_DB_HOST: answer-db
-      ASC_DB_NAME: ${DB_CREATE_DATABASE_NAME:-answer}
+      AUTO_INSTALL: "false"
+      DB_TYPE: mysql
+      DB_USERNAME: ${DB_USER_NAME:-answer}
+      DB_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
+      DB_HOST: answer-db:3306
+      DB_NAME: ${DB_CREATE_DATABASE_NAME:-answer}
     volumes:
       - ./volumes/data/answer:/data
     depends_on:
